@@ -21,6 +21,7 @@ services:
     container_name: nestjs-service
     restart: always
     environment:
+      - NODE_ENV=${NODE_ENV}
       - DB_HOST=db
     ports:
       - "3000:3000"
