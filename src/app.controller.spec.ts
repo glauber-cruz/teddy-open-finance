@@ -1,22 +1,56 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { Test, TestingModule } from "@nestjs/testing";
+import { AppModule } from "./app.module";
 
-describe('AppController', () => {
-  let appController: AppController;
+import * as request from "supertest";
+import { NestApplication } from "@nestjs/core";
 
-  beforeEach(async () => {
-    const app: TestingModule = await Test.createTestingModule({
-      controllers: [AppController],
-      providers: [AppService],
+let app: NestApplication;
+
+describe("App Controller", () => {
+  let token: string;
+
+  beforeAll(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [ AppModule ],
     }).compile();
 
-    appController = app.get<AppController>(AppController);
+    app = moduleFixture.createNestApplication();
+    await app.init();
+
+    token = process.env.TEST_AUTH_TOKEN || "";
   });
 
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+  afterAll(async () => {
+    await app.close();
+  });
+
+  describe("GET /:short_key", () => {
+
+    it("should redirect to the url", async () => {
+
+      const redirectUrl = "https://www.youtube.com/watch?v=OgCv-qrlRrI&list=RDGMEMP-96bLtob-xyvCobnxVfyw&index=10";
+
+      /*Don't worry about delete the url for this user, all url created to this user is set as deleted automatically after
+      all tests to be completed*/
+      const response = await request(app.getHttpServer())
+        .post("/api/shortfy")
+        .send({ url:redirectUrl })
+        .set("Authorization", `Bearer ${token}`); 
+
+      const url = response.text;
+      const shortUrlKey = url.split(`${process.env.URL}/`)[1];
+
+      await request(app.getHttpServer())
+        .get(`/${shortUrlKey}`)
+        .expect(302)
+        .expect("Location", redirectUrl);
+    });
+
+
+    it("should return 404 if it search for an url that doesn't exists", async () => {
+      await request(app.getHttpServer())
+        .get("/asd123s")
+        .expect(404);
     });
   });
 });
