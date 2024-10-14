@@ -12,6 +12,9 @@ jobs:
           echo "NODE_ENV=test" >> $GITHUB_ENV
           docker compose -f ./docker-composer.yml up -d 
 
+      - name: Run lint
+        run: docker compose -f ./docker-compose.yml exec nest-app npm run lint
+
       - name: Run tests
         run: docker compose -f ./docker-composer.yml exec nest-app npm run test 
 
