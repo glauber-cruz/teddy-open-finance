@@ -4,14 +4,34 @@ import { UsersModule } from "./modules/users/users.module";
 import Entities from "./common/constants/entities"; 
 import { TypeOrmModule } from "@nestjs/typeorm";
 
-import { ConfigModule } from "@nestjs/config";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 import { Module } from "@nestjs/common";
 
 import { JwtModule } from "@nestjs/jwt";
 import { AuthModule } from "./modules/auth/auth.module";
 
+import { CacheModule, CacheModuleAsyncOptions } from "@nestjs/cache-manager";
+import { redisStore } from "cache-manager-redis-store";
+
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
+
+const RedisOptions: CacheModuleAsyncOptions = {
+  isGlobal: true,
+  imports: [ ConfigModule ],
+  useFactory: async () => {
+    const store = await redisStore({
+      socket: {
+        host: process.env.REDIS_HOST,
+        port: parseInt(process.env.REDIS_PORT || ""),
+      },
+    });
+    return {
+      store: () => store,
+    };
+  },
+  inject: [ ConfigService ],
+};
 
 @Module({
   imports: [
@@ -19,6 +39,8 @@ import { AppService } from "./app.service";
       envFilePath:process.env.NODE_ENV === "test" ? ".env.test" : ".env", 
       isGlobal: true,
     }),
+
+    CacheModule.registerAsync(RedisOptions),
 
     TypeOrmModule.forRoot({
       type: "postgres",

@@ -1,5 +1,5 @@
 import { generateUrlKey } from "../../common/utils/generateUrlKey";
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 
 import { Urls } from "../../common/models/urls.entity";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -11,6 +11,10 @@ import { UsersUrls } from "../../common/models/UsersUrls.entity";
 import { generateShortUrl } from "../../common/utils/generateShortUrl";
 
 import { forbiddenError, internalServerErrorException } from "../../common/utils/requestsErrors";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
+
+import { Cache } from "cache-manager";
+
 
 @Injectable()
 export class ShortfyService {
@@ -23,7 +27,10 @@ export class ShortfyService {
     private usersRepository: Repository<Users>,
 
     @InjectRepository(UsersUrls)
-    private usersUrlsRepository: Repository<UsersUrls>
+    private usersUrlsRepository: Repository<UsersUrls>,
+
+    @Inject(CACHE_MANAGER) 
+    private readonly cacheManager: Cache
   ) {}
   
 
@@ -137,8 +144,10 @@ export class ShortfyService {
 
     const url = userUrl.url;
     url.long_url = newOrigin;
-  
+    
+    await this.deleteCache(url.short_id);
     await this.urlsRepository.save(url);
+
     return {
       message: "URL updated successfully",
       short_id: url.short_id,
@@ -166,8 +175,20 @@ export class ShortfyService {
 
     if (!userUrl) throw forbiddenError("You are not authorized to delete this URL or the URL was not found.", "url_id");
     const url = userUrl.url;
+
+    await this.deleteCache(url.short_id);
     
     url.deleted_at = new Date();
     await this.urlsRepository.save(url);
+  }
+
+
+  private async deleteCache(shortId:string) {
+    try {
+      await this.cacheManager.del(`${process.env.CACHE_URL_PREFIX}${shortId}`);
+    }
+    catch {
+      return;
+    }
   }
 }
