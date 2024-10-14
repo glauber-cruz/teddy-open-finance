@@ -8,6 +8,6 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Run docker
-        run: docker compose up -f docker-composer.yml -d
+        run: docker compose up -d
 
       
