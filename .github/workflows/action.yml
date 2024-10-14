@@ -9,3 +9,10 @@ jobs:
 
       - name: Run docker
         run: docker compose -f ./docker-composer.yml up 
+
+      - name: Run tests
+        run: docker exec nest-app npm run test
+
+      - name: Tear down Docker
+        if: always()
+        run: docker compose -f ./docker-composer.yml down
