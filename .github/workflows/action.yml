@@ -12,6 +12,9 @@ jobs:
           echo "NODE_ENV=test" >> $GITHUB_ENV
           docker compose -f ./docker-composer.yml up -d 
 
+      - name: Run tests
+        run: docker compose -f ./docker-composer.yml exec nest-app npm run test 
+
       - name: Tear down Docker
         if: always()
         run: docker compose -f ./docker-composer.yml down
