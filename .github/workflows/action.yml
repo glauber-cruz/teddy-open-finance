@@ -10,8 +10,6 @@ jobs:
       - name: Set up Docker
         env:
           NODE_ENV: test
-
-      - name: Run docker
         run: docker compose -f ./docker-composer.yml up 
 
       - name: Run tests
