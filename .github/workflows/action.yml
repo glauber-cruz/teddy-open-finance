@@ -2,10 +2,14 @@ name: Teddy Open Finance Demo Action
 
 on: ["push"]
 jobs:
-  tests:
+  run-tests:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
+      
+      - name: Set up Docker
+        env:
+          NODE_ENV: test
 
       - name: Run docker
         run: docker compose -f ./docker-composer.yml up 
