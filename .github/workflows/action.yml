@@ -1,0 +1,13 @@
+name: Teddy Open Finance Demo Action
+
+on: ["push"]
+jobs:
+  tests:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run docker
+        run: docker-compose up -d
+
+      
