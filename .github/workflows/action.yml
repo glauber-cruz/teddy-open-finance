@@ -10,7 +10,7 @@ jobs:
       - name: Set up Docker
         run: |
           echo "NODE_ENV=test" >> $GITHUB_ENV
-          docker compose -f ./docker-composer.yml up -d
+          docker compose -f ./docker-composer.yml up -d 
 
       - name: Tear down Docker
         if: always()
